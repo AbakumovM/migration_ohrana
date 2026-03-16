@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}{{ obj.name }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-start mb-3 gap-2">
+  <a href="/legal-entities/{{ obj.legal_entity_id }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <div class="me-auto">
+    <div class="fw-bold fs-5">{{ obj.name }}</div>
+    <div class="text-muted small">{{ obj.town }}{% if obj.street %}, {{ obj.street }}{% endif %}</div>
+  </div>
+  <a href="/objects/{{ obj.id }}/inspections/" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-calendar-check me-1"></i>Обследования
+  </a>
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal">
+    <i class="bi bi-pencil me-1"></i>Редактировать
+  </button>
+  <form method="post" action="/objects/{{ obj.id }}/archive">
+    <button class="btn btn-sm btn-outline-warning" onclick="return confirm('Перенести в архив?')">
+      <i class="bi bi-archive me-1"></i>В архив
+    </button>
+  </form>
+  <form method="post" action="/objects/{{ obj.id }}/delete">
+    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить объект?')">
+      <i class="bi bi-trash me-1"></i>Удалить
+    </button>
+  </form>
+</div>
+
+<!-- Карточка объекта -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <div class="mb-2"><span class="text-muted small">Телефон</span><div>{{ obj.phone or '—' }}</div></div>
+      <div class="mb-2"><span class="text-muted small">Подписант</span><div>{{ obj.signatory or '—' }}</div></div>
+      <div><span class="text-muted small">Принят под охрану</span>
+        <div>{{ obj.accepted_date.strftime('%d.%m.%Y') if obj.accepted_date else '—' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <!-- Документы -->
+    <div class="card p-3 h-100">
+      <div class="fw-medium mb-2">Печать документов</div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="/objects/{{ obj.id }}/documents/perechen" target="_blank" class="btn btn-sm btn-outline-secondary">Перечень</a>
+        <a href="/objects/{{ obj.id }}/documents/raschet" target="_blank" class="btn btn-sm btn-outline-secondary">Расчёт</a>
+        <a href="/objects/{{ obj.id }}/documents/protokol" target="_blank" class="btn btn-sm btn-outline-secondary">Протокол согл. цены</a>
+        <a href="/objects/{{ obj.id }}/documents/prikaz" target="_blank" class="btn btn-sm btn-outline-secondary">Приказ</a>
+        <a href="/objects/{{ obj.id }}/documents/uvedomlenie" target="_blank" class="btn btn-sm btn-outline-secondary">Уведомление</a>
+        <a href="/objects/{{ obj.id }}/documents/soprovodilovka" target="_blank" class="btn btn-sm btn-outline-secondary">Сопроводиловка акта</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Виды охраны -->
+<div class="d-flex align-items-center mb-2">
+  <h6 class="mb-0 me-auto">Виды охраны</h6>
+  <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+    <i class="bi bi-plus-lg me-1"></i>Подключить
+  </button>
+</div>
+<div class="card mb-4">
+  <table class="table table-hover mb-0">
+    <thead>
+      <tr>
+        <th>Вид</th>
+        <th>Дата с</th>
+        <th>Дата по</th>
+        <th>Тариф</th>
+        <th>Период</th>
+        <th>Сумма/мес</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for svc in services %}
+      <tr class="align-middle">
+        <td>
+          <span class="badge {% if svc.service_type.value == 'КТС' %}bg-primary{% else %}bg-success{% endif %}">
+            {{ svc.service_type.value }}
+          </span>
+        </td>
+        <td>{{ svc.date_from.strftime('%d.%m.%Y') if svc.date_from else '—' }}</td>
+        <td>{{ svc.date_to.strftime('%d.%m.%Y') if svc.date_to else '—' }}</td>
+        <td>{{ '%.2f'|format(svc.tariff) }}</td>
+        <td>{{ svc.period }}</td>
+        <td>{{ '%.2f'|format(svc.monthly_sum) }}</td>
+        <td class="text-end">
+          <a href="/objects/{{ obj.id }}/services/{{ svc.id }}/schedule"
+             class="btn btn-sm btn-outline-primary">Время охраны</a>
+          <form method="post" action="/objects/{{ obj.id }}/services/{{ svc.id }}/delete" class="d-inline">
+            <button class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('Отключить вид охраны?')">
+              <i class="bi bi-x"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-center text-muted py-3">Виды охраны не подключены</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal добавления вида охраны -->
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Подключить вид охраны</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/objects/{{ obj.id }}/services/add">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Вид охраны</label>
+            <select class="form-select" name="service_type">
+              {% for st in service_types %}
+              <option value="{{ st.value }}">{{ st.value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Дата с</label>
+              <input class="form-control" name="date_from" type="date">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Дата по</label>
+              <input class="form-control" name="date_to" type="date">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">Тариф</label>
+              <input class="form-control" name="tariff" type="number" step="0.01" value="0">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Период (мес.)</label>
+              <input class="form-control" name="period" type="number" value="12">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary">Подключить</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal редактирования объекта -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Редактировать объект</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/objects/{{ obj.id }}/edit">
+        <input type="hidden" name="legal_entity_id" value="{{ obj.legal_entity_id }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Наименование</label>
+            <input class="form-control" name="name" required value="{{ obj.name }}">
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <label class="form-label">Город</label>
+              <input class="form-control" name="town" value="{{ obj.town }}">
+            </div>
+            <div class="col-8">
+              <label class="form-label">Адрес</label>
+              <input class="form-control" name="street" value="{{ obj.street }}">
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Телефон</label>
+              <input class="form-control" name="phone" value="{{ obj.phone }}">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Подписант</label>
+              <input class="form-control" name="signatory" value="{{ obj.signatory }}">
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Принят под охрану</label>
+            <input class="form-control" name="accepted_date" type="date"
+                   value="{{ obj.accepted_date.isoformat() if obj.accepted_date else '' }}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary">Сохранить</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
