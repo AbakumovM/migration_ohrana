@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Время охраны — {{ service.service_type.value }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+  <div class="d-flex align-items-center mb-3">
+    <a href="/objects/{{ object_id }}" class="btn btn-sm btn-outline-secondary me-3">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">Время охраны —
+      <span class="badge {% if service.service_type.value == 'КТС' %}bg-primary{% else %}bg-success{% endif %} fs-6">
+        {{ service.service_type.value }}
+      </span>
+    </h5>
+  </div>
+
+  <div class="card p-4">
+    <form method="post">
+      <!-- Тариф и период -->
+      <div class="row g-3 mb-4">
+        <div class="col-4">
+          <label class="form-label fw-medium">Тариф</label>
+          <input class="form-control" name="tariff" type="number" step="0.01"
+                 value="{{ '%.2f'|format(service.tariff) }}" id="tariff">
+        </div>
+        <div class="col-4">
+          <label class="form-label fw-medium">Период (мес.)</label>
+          <input class="form-control" name="period" type="number" value="{{ service.period }}" id="period">
+        </div>
+        <div class="col-4">
+          <label class="form-label fw-medium">Сумма за охрану</label>
+          <div class="form-control bg-light fw-bold" id="sum_display">{{ '%.2f'|format(service.monthly_sum) }}</div>
+        </div>
+      </div>
+
+      <!-- Даты -->
+      <div class="row g-3 mb-4">
+        <div class="col-6">
+          <label class="form-label">Дата с</label>
+          <input class="form-control" name="date_from" type="date"
+                 value="{{ service.date_from.isoformat() if service.date_from else '' }}">
+        </div>
+        <div class="col-6">
+          <label class="form-label">Дата по</label>
+          <input class="form-control" name="date_to" type="date"
+                 value="{{ service.date_to.isoformat() if service.date_to else '' }}">
+        </div>
+      </div>
+
+      <!-- Часы работы объекта -->
+      <div class="row g-3 mb-3">
+        <div class="col-4">
+          <label class="form-label">Часы работы объекта</label>
+          <div class="d-flex gap-2 align-items-center">
+            <input class="form-control" name="work_start" type="time"
+                   value="{{ service.schedule.work_start if service.schedule else '08:00' }}">
+            <span>—</span>
+            <input class="form-control" name="work_end" type="time"
+                   value="{{ service.schedule.work_end if service.schedule else '18:00' }}">
+          </div>
+        </div>
+        <div class="col-8">
+          <label class="form-label">Выходные дни</label>
+          <input class="form-control" name="days_off"
+                 value="{{ service.schedule.days_off if service.schedule else 'суб.,вск.,праз' }}">
+        </div>
+      </div>
+
+      <!-- Таблица времени охраны -->
+      <table class="table table-bordered mb-4">
+        <thead class="table-light">
+          <tr>
+            <th></th>
+            <th>Время охраны (с — до)</th>
+            <th style="width:120px">Кол-во дней</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-muted">Рабочие дни</td>
+            <td>
+              <div class="d-flex gap-2 align-items-center">
+                <input class="form-control form-control-sm" name="workday_from" type="time"
+                       value="{{ service.schedule.workday_from if service.schedule else '18:00' }}"
+                       onchange="calcSum()">
+                <span>—</span>
+                <input class="form-control form-control-sm" name="workday_to" type="time"
+                       value="{{ service.schedule.workday_to if service.schedule else '08:00' }}"
+                       onchange="calcSum()">
+              </div>
+            </td>
+            <td>
+              <input class="form-control form-control-sm text-center" name="workday_count" type="number"
+                     id="workday_count" min="0"
+                     value="{{ service.schedule.workday_count if service.schedule else 0 }}"
+                     onchange="calcSum()">
+            </td>
+          </tr>
+          <tr>
+            <td class="text-muted">Предпразд./предвых.</td>
+            <td>
+              <div class="d-flex gap-2 align-items-center">
+                <input class="form-control form-control-sm" name="preholiday_from" type="time"
+                       value="{{ service.schedule.preholiday_from if service.schedule else '18:00' }}"
+                       onchange="calcSum()">
+                <span>—</span>
+                <input class="form-control form-control-sm" name="preholiday_to" type="time"
+                       value="{{ service.schedule.preholiday_to if service.schedule else '08:00' }}"
+                       onchange="calcSum()">
+              </div>
+            </td>
+            <td>
+              <input class="form-control form-control-sm text-center" name="preholiday_count" type="number"
+                     id="preholiday_count" min="0"
+                     value="{{ service.schedule.preholiday_count if service.schedule else 0 }}"
+                     onchange="calcSum()">
+            </td>
+          </tr>
+          <tr>
+            <td class="text-muted">Выходные дни</td>
+            <td>
+              <div class="d-flex gap-2 align-items-center">
+                <input class="form-control form-control-sm" name="holiday_from" type="time"
+                       value="{{ service.schedule.holiday_from if service.schedule else '00:00' }}"
+                       onchange="calcSum()">
+                <span>—</span>
+                <input class="form-control form-control-sm" name="holiday_to" type="time"
+                       value="{{ service.schedule.holiday_to if service.schedule else '24:00' }}"
+                       onchange="calcSum()">
+              </div>
+            </td>
+            <td>
+              <input class="form-control form-control-sm text-center" name="holiday_count" type="number"
+                     id="holiday_count" min="0"
+                     value="{{ service.schedule.holiday_count if service.schedule else 0 }}"
+                     onchange="calcSum()">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary">Сохранить</button>
+        <a href="/objects/{{ object_id }}" class="btn btn-outline-secondary">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function parseDuration(fromId, toId) {
+  const f = document.querySelector(`[name="${fromId}"]`).value;
+  const t = document.querySelector(`[name="${toId}"]`).value;
+  if (!f || !t) return 0;
+  const toH = v => { const [h,m] = v.split(':').map(Number); return h + m/60; };
+  const s = toH(f), e = toH(t);
+  return e >= s ? e - s : 24 - s + e;
+}
+function calcSum() {
+  const tariff = parseFloat(document.getElementById('tariff').value) || 0;
+  const period = parseInt(document.getElementById('period').value) || 12;
+  const wd = parseInt(document.getElementById('workday_count').value) || 0;
+  const ph = parseInt(document.getElementById('preholiday_count').value) || 0;
+  const hd = parseInt(document.getElementById('holiday_count').value) || 0;
+  const totalHours = parseDuration('workday_from','workday_to') * wd
+                   + parseDuration('preholiday_from','preholiday_to') * ph
+                   + parseDuration('holiday_from','holiday_to') * hd;
+  const sum = period > 0 ? (totalHours / period) * tariff : 0;
+  document.getElementById('sum_display').textContent = sum.toFixed(2);
+}
+document.getElementById('tariff').addEventListener('input', calcSum);
+document.getElementById('period').addEventListener('input', calcSum);
+document.querySelectorAll('input[type="time"], input[type="number"]').forEach(el => {
+  el.addEventListener('change', calcSum);
+});
+</script>
+{% endblock %}

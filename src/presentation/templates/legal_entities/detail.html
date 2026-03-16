@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ entity.name }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-start mb-3 gap-3">
+  <a href="/" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <div class="me-auto">
+    <h5 class="mb-0">{{ entity.contract_type.value }} № {{ entity.contract_number }}</h5>
+    <div class="fw-bold fs-5">{{ entity.name }}</div>
+  </div>
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal">
+    <i class="bi bi-pencil me-1"></i>Редактировать
+  </button>
+  <form method="post" action="/legal-entities/{{ entity.id }}/delete"
+        onsubmit="return confirm('Удалить юр. лицо и все его объекты?')">
+    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Удалить</button>
+  </form>
+</div>
+
+<div class="d-flex align-items-center mb-3">
+  <h6 class="mb-0 me-auto">Объекты охраны ({{ objects|length }})</h6>
+  <a href="/objects/new?legal_entity_id={{ entity.id }}" class="btn btn-sm btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Добавить объект
+  </a>
+</div>
+
+<div class="card">
+  <table class="table table-hover mb-0">
+    <thead>
+      <tr>
+        <th>Объект</th>
+        <th>Город</th>
+        <th>Адрес</th>
+        <th>Телефон</th>
+        <th>Принят под охрану</th>
+        <th>Виды охраны</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for obj in objects %}
+      <tr class="align-middle {% if obj.is_archived %}text-muted{% endif %}">
+        <td>
+          <a href="/objects/{{ obj.id }}" class="text-decoration-none {% if obj.is_archived %}text-muted{% else %}fw-medium{% endif %}">
+            {{ obj.name }}
+          </a>
+          {% if obj.is_archived %}<span class="badge bg-secondary ms-1">архив</span>{% endif %}
+        </td>
+        <td>{{ obj.town }}</td>
+        <td>{{ obj.street }}</td>
+        <td>{{ obj.phone }}</td>
+        <td>{{ obj.accepted_date.strftime('%d.%m.%Y') if obj.accepted_date else '—' }}</td>
+        <td>—</td>
+        <td><a href="/objects/{{ obj.id }}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-center text-muted py-4">Объекты не добавлены</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal редактирования -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Редактировать</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/legal-entities/{{ entity.id }}/edit">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Название</label>
+            <input class="form-control" name="name" required value="{{ entity.name }}">
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">Тип</label>
+              <select class="form-select" name="contract_type">
+                {% for ct in contract_types %}
+                <option value="{{ ct.value }}" {% if entity.contract_type == ct %}selected{% endif %}>{{ ct.value }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-3">
+              <label class="form-label">Номер</label>
+              <input class="form-control" name="contract_number" type="number" value="{{ entity.contract_number }}">
+            </div>
+            <div class="col-3">
+              <label class="form-label">Код</label>
+              <input class="form-control" name="code" type="number" value="{{ entity.code or '' }}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary">Сохранить</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

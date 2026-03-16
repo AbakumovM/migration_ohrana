@@ -1,0 +1,9 @@
+su=15000
+pr_=0
+do while su>0
+pro=su*0.22/12
+su=su-1000
+pr_=pr_+pro
+?su,pro
+enddo
+?pr_

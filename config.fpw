@@ -1,0 +1,12 @@
+SCREEN = on
+TITLE = ÎÂÎ ןנט ÎÂÄ ד. Ðוגהא,2001 ד.
+
+set sysformats on
+set exact off
+set talk off
+set safety off
+
+set reprocess to automatic
+set MULTILOCKS ON
+set EXCLUSIVE OFF
+set refresh to 9,9
