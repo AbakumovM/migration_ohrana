@@ -11,7 +11,6 @@ from src.infrastructure.database.models import (
     Base,
     GuardScheduleModel,
     GuardedObjectModel,
-    InspectionModel,
     LegalEntityModel,
     ObjectServiceModel,
     OrgSettingsModel,
@@ -124,63 +123,38 @@ def migrate() -> None:
         obj_name = obj.name
 
         # КТС
+        kts_time = time_kts.get(obj_name)
         if row.get("KTS"):
             svc = ObjectServiceModel(
                 object_id=obj.id,
                 service_type="КТС",
                 date_from=row.get("D_N_K"),
                 date_to=row.get("D_K_K"),
-                tariff=0.0,
-                period=12,
+                tariff=float(kts_time.get("TAR") or 0.0) if kts_time else 0.0,
+                period=int(kts_time.get("PERIOD") or 12) if kts_time else 12,
             )
             db.add(svc)
             db.flush()
-            _attach_schedule(db, svc, time_kts.get(obj_name))
+            _attach_schedule(db, svc, kts_time)
             svc_count += 1
 
         # ПЦН
+        pul_time = time_pul.get(obj_name)
         if row.get("PUL"):
             svc = ObjectServiceModel(
                 object_id=obj.id,
                 service_type="ПЦН",
                 date_from=row.get("D_N_P"),
                 date_to=row.get("D_K_P"),
-                tariff=0.0,
-                period=12,
+                tariff=float(pul_time.get("TAR") or 0.0) if pul_time else 0.0,
+                period=int(pul_time.get("PERIOD") or 12) if pul_time else 12,
             )
             db.add(svc)
             db.flush()
-            _attach_schedule(db, svc, time_pul.get(obj_name))
+            _attach_schedule(db, svc, pul_time)
             svc_count += 1
 
     print(f"  Объектов: {obj_count}, видов охраны: {svc_count}")
-
-    print("Читаем обследования (obsled.dbf)...")
-    obsled_path = DATA_DIR / "obsled.dbf"
-    insp_count = 0
-    if obsled_path.exists():
-        # Строим обратный словарь имя объекта → id
-        obj_name_map: dict[str, int] = {}
-        for o in db.query(GuardedObjectModel).all():
-            obj_name_map[o.name] = o.id
-
-        try:
-            for row in DBF(str(obsled_path), encoding="cp1251", ignore_missing_memofile=True):
-                name = _str(row.get("OBIEKT"))
-                d = row.get("DATA")
-                if not name or not d or name not in obj_name_map:
-                    continue
-                insp = InspectionModel(
-                    object_id=obj_name_map[name],
-                    date=d,
-                    inspector="",
-                )
-                db.add(insp)
-                insp_count += 1
-        except Exception as e:
-            print(f"  Предупреждение при чтении obsled.dbf: {e}")
-
-    print(f"  Обследований: {insp_count}")
 
     db.commit()
     db.close()

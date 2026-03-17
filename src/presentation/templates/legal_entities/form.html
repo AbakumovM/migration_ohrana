@@ -21,7 +21,7 @@
         </div>
         <div class="col-3">
           <label class="form-label">Номер</label>
-          <input class="form-control" name="contract_number" type="number" value="{{ entity.contract_number if entity else 0 }}">
+          <input class="form-control" name="contract_number" type="number" value="{{ entity.contract_number if entity else next_number }}">
         </div>
         <div class="col-3">
           <label class="form-label">Код</label>

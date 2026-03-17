@@ -124,7 +124,8 @@
                        value="{{ service.schedule.holiday_from if service.schedule else '00:00' }}"
                        onchange="calcSum()">
                 <span>—</span>
-                <input class="form-control form-control-sm" name="holiday_to" type="time"
+                <input class="form-control form-control-sm" name="holiday_to" type="text"
+                       placeholder="24:00"
                        value="{{ service.schedule.holiday_to if service.schedule else '24:00' }}"
                        onchange="calcSum()">
               </div>

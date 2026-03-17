@@ -1,3 +1,5 @@
+"""Роутер для работы с охраняемыми объектами, видами охраны и расписанием."""
+
 from datetime import date
 from pathlib import Path
 
@@ -106,9 +108,10 @@ def edit(
 
 @router.post("/{object_id}/archive")
 def archive(object_id: int, db: Session = Depends(get_db)):
-    obj = GetObject(_repo(db)).execute(object_id)
+    repo = _repo(db)
+    obj = GetObject(repo).execute(object_id)
     legal_entity_id = obj.legal_entity_id if obj else None
-    ArchiveObject(_repo(db)).execute(object_id)
+    ArchiveObject(repo).execute(object_id)
     return RedirectResponse(
         f"/legal-entities/{legal_entity_id}" if legal_entity_id else "/", status_code=303
     )
@@ -116,9 +119,10 @@ def archive(object_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{object_id}/delete")
 def delete(object_id: int, db: Session = Depends(get_db)):
-    obj = GetObject(_repo(db)).execute(object_id)
+    repo = _repo(db)
+    obj = GetObject(repo).execute(object_id)
     legal_entity_id = obj.legal_entity_id if obj else None
-    DeleteObject(_repo(db)).execute(object_id)
+    DeleteObject(repo).execute(object_id)
     return RedirectResponse(
         f"/legal-entities/{legal_entity_id}" if legal_entity_id else "/", status_code=303
     )
