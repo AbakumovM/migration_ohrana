@@ -18,7 +18,7 @@ class ILegalEntityRepository(ABC):
 
     @abstractmethod
     def search(self, query: str) -> list[LegalEntity]:
-        """Возвращает юридические лица, название которых содержит query (без учёта регистра)."""
+        """Возвращает юридические лица, название или номер договора которых содержит query (без учёта регистра)."""
         ...
 
     @abstractmethod

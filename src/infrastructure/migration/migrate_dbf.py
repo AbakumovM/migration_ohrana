@@ -6,6 +6,7 @@
 from pathlib import Path
 
 from dbfread import DBF
+from sqlalchemy.orm import Session
 
 from src.infrastructure.database.models import (
     Base,
@@ -21,9 +22,38 @@ DATA_DIR = Path(__file__).parents[3] / "DATA"
 
 
 def _str(val: object) -> str:
+    """Приводит значение к строке, убирая пробелы по краям.
+
+    Args:
+        val: Любое значение из DBF-записи.
+
+    Returns:
+        Строка без ведущих и завершающих пробелов. Пустая строка для None.
+    """
     if val is None:
         return ""
     return str(val).strip()
+
+
+def _parse_time(val: object) -> str:
+    """Нормализует строку времени из DBF в формат HH:MM.
+
+    Args:
+        val: Значение поля времени (например, '18.00' или '8:0').
+
+    Returns:
+        Строка в формате 'HH:MM'. При некорректном значении — '00:00'.
+    """
+    s = _str(val)
+    parts = s.replace(".", ":").split(":")
+    if len(parts) >= 2:
+        try:
+            h = int(parts[0]) % 24
+            m = int(parts[1]) % 60
+            return f"{h:02d}:{m:02d}"
+        except ValueError:
+            pass
+    return "00:00"
 
 
 def _load_time_table(filename: str) -> dict[str, dict]:
@@ -42,18 +72,32 @@ def _load_time_table(filename: str) -> dict[str, dict]:
     return result
 
 
-def _parse_time(val: object) -> str:
-    s = _str(val)
-    # нормализуем строку времени HH:MM
-    parts = s.replace(".", ":").split(":")
-    if len(parts) >= 2:
-        try:
-            h = int(parts[0]) % 24
-            m = int(parts[1]) % 60
-            return f"{h:02d}:{m:02d}"
-        except ValueError:
-            pass
-    return "00:00"
+def _attach_schedule(db: Session, svc: ObjectServiceModel, time_row: dict | None) -> None:
+    """Создаёт и добавляет в сессию запись расписания охраны для вида охраны.
+
+    Args:
+        db: Сессия SQLAlchemy.
+        svc: Модель вида охраны, к которой привязывается расписание.
+        time_row: Строка из time_kts.dbf или time_pul.dbf. Если None — расписание не создаётся.
+    """
+    if time_row is None:
+        return
+    sched = GuardScheduleModel(
+        service_id=svc.id,
+        work_start=_parse_time(time_row.get("NACH")),
+        work_end=_parse_time(time_row.get("KON")),
+        days_off=_str(time_row.get("VICH")) or "суб.,вск.,праз",
+        workday_from=_parse_time(time_row.get("V_NACH")),
+        workday_to=_parse_time(time_row.get("V_KON")),
+        workday_count=int(time_row.get("DAY_V") or 0),
+        preholiday_from=_parse_time(time_row.get("P_NACH")),
+        preholiday_to=_parse_time(time_row.get("P_KON")),
+        preholiday_count=int(time_row.get("DAY_P") or 0),
+        holiday_from=_parse_time(time_row.get("R_NACH") or time_row.get("R")),
+        holiday_to=_parse_time(time_row.get("R_KON") or time_row.get("R1")),
+        holiday_count=int(time_row.get("DAY_R") or 0),
+    )
+    db.add(sched)
 
 
 def migrate() -> None:
@@ -157,7 +201,7 @@ def migrate() -> None:
     print(f"  Объектов: {obj_count}, видов охраны: {svc_count}")
 
     db.commit()
-    db.close()
+
     print("Читаем настройки организации (nastr.dbf)...")
     nastr_path = DATA_DIR / "nastr.dbf"
     if nastr_path.exists() and db.query(OrgSettingsModel).count() == 0:
@@ -172,28 +216,8 @@ def migrate() -> None:
             db.commit()
             print(f"  Организация: {_str(r.get('PREDPR'))[:60]}...")
 
+    db.close()
     print("Миграция завершена.")
-
-
-def _attach_schedule(db, svc: ObjectServiceModel, time_row: dict | None) -> None:
-    if time_row is None:
-        return
-    sched = GuardScheduleModel(
-        service_id=svc.id,
-        work_start=_parse_time(time_row.get("NACH")),
-        work_end=_parse_time(time_row.get("KON")),
-        days_off=_str(time_row.get("VICH")) or "суб.,вск.,праз",
-        workday_from=_parse_time(time_row.get("V_NACH")),
-        workday_to=_parse_time(time_row.get("V_KON")),
-        workday_count=int(time_row.get("DAY_V") or 0),
-        preholiday_from=_parse_time(time_row.get("P_NACH")),
-        preholiday_to=_parse_time(time_row.get("P_KON")),
-        preholiday_count=int(time_row.get("DAY_P") or 0),
-        holiday_from=_parse_time(time_row.get("R_NACH") or time_row.get("R")),
-        holiday_to=_parse_time(time_row.get("R_KON") or time_row.get("R1")),
-        holiday_count=int(time_row.get("DAY_R") or 0),
-    )
-    db.add(sched)
 
 
 if __name__ == "__main__":

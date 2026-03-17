@@ -46,13 +46,24 @@ class SQLLegalEntityRepository(ILegalEntityRepository):
         return (max_num or 0) + 1
 
     def search(self, query: str) -> list[LegalEntity]:
-        """Возвращает юридические лица, название которых содержит query (без учёта регистра)."""
-        rows = (
-            self._db.query(LegalEntityModel)
-            .filter(LegalEntityModel.name.ilike(f"%{query}%"))
-            .order_by(LegalEntityModel.name)
-            .all()
-        )
+        """Возвращает юридические лица, название или номер договора которых совпадает с query (без учёта регистра).
+
+        Фильтрация по названию выполняется на Python, т.к. SQLite не поддерживает
+        регистронезависимое сравнение кириллицы на уровне SQL.
+        """
+        if query.isdigit():
+            rows = (
+                self._db.query(LegalEntityModel)
+                .filter(LegalEntityModel.contract_number == int(query))
+                .order_by(LegalEntityModel.name)
+                .all()
+            )
+        else:
+            q = query.lower()
+            rows = [
+                r for r in self._db.query(LegalEntityModel).order_by(LegalEntityModel.name).all()
+                if q in r.name.lower()
+            ]
         return [_to_entity(r) for r in rows]
 
     def get_by_id(self, entity_id: int) -> LegalEntity | None:
