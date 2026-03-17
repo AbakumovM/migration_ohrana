@@ -8,6 +8,11 @@ class ContractType(str, Enum):
     CONTRACT = "Контракт"
     AGREEMENT = "Договор"
 
+    @property
+    def dative(self) -> str:
+        """Форма дательного падежа для предложного оборота 'к Договору'."""
+        return self.value + "у"
+
 
 @dataclass
 class LegalEntity:

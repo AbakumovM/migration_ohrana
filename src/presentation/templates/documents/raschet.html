@@ -3,7 +3,7 @@
 {% block content %}
 {% if legal_entity %}
 <p style="text-align:right; font-size:10pt;">
-  Приложение № 2 к {{ legal_entity.contract_type.value }} № {{ legal_entity.contract_number }}
+  Приложение № 2 к {{ legal_entity.contract_type.dative }} № {{ legal_entity.contract_number }}
 </p>
 <p style="text-align:right; font-size:9pt; margin-top:0;">
   Оплата по данному расчёту с "___" _____________ 20___ г.
@@ -23,13 +23,13 @@
 <table style="font-size:9pt; width:100%;">
   <thead>
     <tr>
-      <th rowspan="2" style="width:18%">Наименование объекта, обособленного помещения</th>
-      <th rowspan="2" style="width:12%">сигнализация</th>
+      <th rowspan="2" style="width:15%">Наименование объекта, обособленного помещения</th>
+      <th rowspan="2" style="width:10%">сигнализация</th>
       <th colspan="3">Продолжительность охраны в сутки часов</th>
       <th colspan="3">Кол-во календарных дней</th>
-      <th rowspan="2" style="width:8%">Всего часов</th>
-      <th rowspan="2" style="width:9%">Стоимость охраны объекта за 1 час</th>
-      <th rowspan="2" style="width:10%">Принимается ОВО за охрану за 1 месяц</th>
+      <th colspan="4">Кол-во часов охраны</th>
+      <th rowspan="2" style="width:7%">Стоимость охраны объекта за 1 час</th>
+      <th rowspan="2" style="width:9%">Принимается ОВО за охрану за 1 месяц</th>
     </tr>
     <tr>
       <th>в рабочие дни</th>
@@ -38,6 +38,10 @@
       <th>в рабочие дни</th>
       <th>в предпразд. предвых. дни</th>
       <th>в выходные дни</th>
+      <th>в рабочие дни</th>
+      <th>в предпразд. предвых. дни</th>
+      <th>в выходные дни</th>
+      <th>всего часов</th>
     </tr>
   </thead>
   <tbody>
@@ -54,13 +58,24 @@
       <td class="center">{{ sch.workday_count if sch else '' }}</td>
       <td class="center">{{ sch.preholiday_count if sch else '' }}</td>
       <td class="center">{{ sch.holiday_count if sch else '' }}</td>
+      <td class="center">{{ '%.1f'|format(sch.workday_hours * sch.workday_count) if sch else '' }}</td>
+      <td class="center">{{ '%.1f'|format(sch.preholiday_hours * sch.preholiday_count) if sch else '' }}</td>
+      <td class="center">{{ '%.1f'|format(sch.holiday_hours * sch.holiday_count) if sch else '' }}</td>
       <td class="center">{{ '%.1f'|format(sch.total_hours) if sch else '' }}</td>
       <td class="center">{{ '%.2f'|format(svc.tariff) }}</td>
       <td class="center">{{ '%.2f'|format(svc.monthly_sum) }}</td>
     </tr>
     {% endfor %}
     <tr>
-      <td colspan="10" style="text-align:right; font-weight:bold;">Всего за охрану .........................</td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td style="border:none;"></td>
+      <td colspan="5" style="text-align:left; font-weight:bold;">Всего за охрану .........................</td>
       <td class="center" style="font-weight:bold;">
         {{ '%.2f'|format(services|sum(attribute='monthly_sum')) }}
       </td>

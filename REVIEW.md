@@ -10,7 +10,7 @@
 | 4 | Объекты охраны (use cases + роутер + виды охраны + расписание) | ⏳ Ожидает | — |
 | 5 | ~~Обследования~~ | 🚫 Удалено | Функциональность не нужна |
 | 6 | Документы PDF (роутер + шаблоны) | ✅ Закрыт | Альбомная ориентация, двойные отступы, репозиторий вместо ORM |
-| 7 | Миграция DBF → SQLite | ⏳ Ожидает | — |
+| 7 | Миграция DBF → SQLite | ✅ Закрыт | Исправлен баг db.close(), перемещена _attach_schedule, type hints и docstrings |
 
 ---
 
@@ -91,4 +91,14 @@
 
 ## Блок 7 — Миграция DBF → SQLite
 
-*(заполняется после Блока 6)*
+**Файл:** `src/infrastructure/migration/migrate_dbf.py`
+
+### Чеклист
+
+- [x] Баг с закрытой сессией исправлен — `db.close()` перенесён в конец `migrate()`
+- [x] `_attach_schedule` перемещена перед `migrate()` (порядок объявления)
+- [x] `_str` — добавлены type hints и docstring
+- [x] `_parse_time` — добавлены type hints и docstring
+- [x] `_attach_schedule` — добавлены type hints (`db: Session`) и docstring
+- [x] `ruff check` — без ошибок
+- [x] `mypy` — без ошибок (28 файлов)
