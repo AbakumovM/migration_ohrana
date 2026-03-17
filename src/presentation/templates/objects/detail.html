@@ -9,10 +9,7 @@
     <div class="fw-bold fs-5">{{ obj.name }}</div>
     <div class="text-muted small">{{ obj.town }}{% if obj.street %}, {{ obj.street }}{% endif %}</div>
   </div>
-  <a href="/objects/{{ obj.id }}/inspections/" class="btn btn-sm btn-outline-secondary">
-    <i class="bi bi-calendar-check me-1"></i>Обследования
-  </a>
-  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal">
+<button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal">
     <i class="bi bi-pencil me-1"></i>Редактировать
   </button>
   <form method="post" action="/objects/{{ obj.id }}/archive">
@@ -46,9 +43,6 @@
         <a href="/objects/{{ obj.id }}/documents/perechen" target="_blank" class="btn btn-sm btn-outline-secondary">Перечень</a>
         <a href="/objects/{{ obj.id }}/documents/raschet" target="_blank" class="btn btn-sm btn-outline-secondary">Расчёт</a>
         <a href="/objects/{{ obj.id }}/documents/protokol" target="_blank" class="btn btn-sm btn-outline-secondary">Протокол согл. цены</a>
-        <a href="/objects/{{ obj.id }}/documents/prikaz" target="_blank" class="btn btn-sm btn-outline-secondary">Приказ</a>
-        <a href="/objects/{{ obj.id }}/documents/uvedomlenie" target="_blank" class="btn btn-sm btn-outline-secondary">Уведомление</a>
-        <a href="/objects/{{ obj.id }}/documents/soprovodilovka" target="_blank" class="btn btn-sm btn-outline-secondary">Сопроводиловка акта</a>
       </div>
     </div>
   </div>
@@ -136,7 +130,7 @@
           <div class="row g-2">
             <div class="col-6">
               <label class="form-label">Тариф</label>
-              <input class="form-control" name="tariff" type="number" step="0.01" value="0">
+              <input class="form-control" name="tariff" type="number" step="0.01" value="15.52">
             </div>
             <div class="col-6">
               <label class="form-label">Период (мес.)</label>

@@ -1,3 +1,5 @@
+"""SQLAlchemy ORM-модели для базы данных SQLite."""
+
 from datetime import date
 
 from sqlalchemy import Boolean, Date, Float, ForeignKey, Integer, String
@@ -5,15 +7,17 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    pass
+    """Базовый класс для всех ORM-моделей."""
 
 
 class LegalEntityModel(Base):
+    """ORM-модель юридического лица."""
+
     __tablename__ = "legal_entities"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    contract_type: Mapped[str] = mapped_column(String(20), default="Контракт")
+    contract_type: Mapped[str] = mapped_column(String(20), default="Договор")
     contract_number: Mapped[int] = mapped_column(Integer, default=0)
     code: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
@@ -23,6 +27,8 @@ class LegalEntityModel(Base):
 
 
 class GuardedObjectModel(Base):
+    """ORM-модель охраняемого объекта."""
+
     __tablename__ = "objects"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -39,12 +45,11 @@ class GuardedObjectModel(Base):
     services: Mapped[list["ObjectServiceModel"]] = relationship(
         back_populates="obj", cascade="all, delete-orphan"
     )
-    inspections: Mapped[list["InspectionModel"]] = relationship(
-        back_populates="obj", cascade="all, delete-orphan"
-    )
 
 
 class ObjectServiceModel(Base):
+    """ORM-модель вида охраны (КТС или ПЦН) на объекте."""
+
     __tablename__ = "object_services"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -62,6 +67,8 @@ class ObjectServiceModel(Base):
 
 
 class GuardScheduleModel(Base):
+    """ORM-модель расписания охраны (время постановки на учёт) для вида охраны."""
+
     __tablename__ = "guard_schedules"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -89,7 +96,7 @@ class GuardScheduleModel(Base):
 
 
 class OrgSettingsModel(Base):
-    """Реквизиты организации (из nastr.dbf)."""
+    """ORM-модель реквизитов организации (из nastr.dbf)."""
 
     __tablename__ = "org_settings"
 
@@ -97,14 +104,3 @@ class OrgSettingsModel(Base):
     chief_name: Mapped[str] = mapped_column(String(100), default="")
     chief_title: Mapped[str] = mapped_column(String(100), default="Начальник")
     org_name: Mapped[str] = mapped_column(String(500), default="")
-
-
-class InspectionModel(Base):
-    __tablename__ = "inspections"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    object_id: Mapped[int] = mapped_column(ForeignKey("objects.id"), nullable=False)
-    date: Mapped[date] = mapped_column(Date, nullable=False)
-    inspector: Mapped[str] = mapped_column(String(100), default="")
-
-    obj: Mapped["GuardedObjectModel"] = relationship(back_populates="inspections")

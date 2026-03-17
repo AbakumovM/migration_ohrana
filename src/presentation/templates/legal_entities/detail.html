@@ -16,6 +16,7 @@
   </form>
 </div>
 
+<!-- Активные объекты -->
 <div class="d-flex align-items-center mb-3">
   <h6 class="mb-0 me-auto">Объекты охраны ({{ objects|length }})</h6>
   <a href="/objects/new?legal_entity_id={{ entity.id }}" class="btn btn-sm btn-primary">
@@ -23,7 +24,7 @@
   </a>
 </div>
 
-<div class="card">
+<div class="card mb-4">
   <table class="table table-hover mb-0">
     <thead>
       <tr>
@@ -38,18 +39,21 @@
     </thead>
     <tbody>
       {% for obj in objects %}
-      <tr class="align-middle {% if obj.is_archived %}text-muted{% endif %}">
+      <tr class="align-middle">
         <td>
-          <a href="/objects/{{ obj.id }}" class="text-decoration-none {% if obj.is_archived %}text-muted{% else %}fw-medium{% endif %}">
-            {{ obj.name }}
-          </a>
-          {% if obj.is_archived %}<span class="badge bg-secondary ms-1">архив</span>{% endif %}
+          <a href="/objects/{{ obj.id }}" class="text-decoration-none fw-medium">{{ obj.name }}</a>
         </td>
         <td>{{ obj.town }}</td>
         <td>{{ obj.street }}</td>
         <td>{{ obj.phone }}</td>
         <td>{{ obj.accepted_date.strftime('%d.%m.%Y') if obj.accepted_date else '—' }}</td>
-        <td>—</td>
+        <td>
+          {% for stype in service_types_map.get(obj.id, []) %}
+            <span class="badge {% if stype == 'КТС' %}bg-primary{% else %}bg-success{% endif %}">{{ stype }}</span>
+          {% else %}
+            —
+          {% endfor %}
+        </td>
         <td><a href="/objects/{{ obj.id }}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
       </tr>
       {% else %}
@@ -58,6 +62,48 @@
     </tbody>
   </table>
 </div>
+
+<!-- Архивные объекты -->
+{% if archived %}
+<div class="d-flex align-items-center mb-3">
+  <h6 class="mb-0 me-auto text-muted">В архиве ({{ archived|length }})</h6>
+</div>
+<div class="card mb-4">
+  <table class="table table-hover mb-0">
+    <thead>
+      <tr>
+        <th>Объект</th>
+        <th>Город</th>
+        <th>Адрес</th>
+        <th>Принят под охрану</th>
+        <th>Виды охраны</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for obj in archived %}
+      <tr class="align-middle text-muted">
+        <td>
+          <a href="/objects/{{ obj.id }}" class="text-decoration-none text-muted">{{ obj.name }}</a>
+          <span class="badge bg-secondary ms-1">архив</span>
+        </td>
+        <td>{{ obj.town }}</td>
+        <td>{{ obj.street }}</td>
+        <td>{{ obj.accepted_date.strftime('%d.%m.%Y') if obj.accepted_date else '—' }}</td>
+        <td>
+          {% for stype in service_types_map.get(obj.id, []) %}
+            <span class="badge bg-secondary">{{ stype }}</span>
+          {% else %}
+            —
+          {% endfor %}
+        </td>
+        <td><a href="/objects/{{ obj.id }}" class="btn btn-sm btn-outline-secondary">Открыть</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 
 <!-- Modal редактирования -->
 <div class="modal fade" id="editModal" tabindex="-1">

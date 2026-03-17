@@ -1,8 +1,9 @@
 {% extends "documents/base_doc.html" %}
+{% block page_style %}@page { size: A4 landscape; margin: 1.5cm; }{% endblock %}
 {% block content %}
 {% if legal_entity %}
 <p style="text-align:right; font-size:10pt;">
-  Приложение № 2 к {{ legal_entity.contract_type }} № {{ legal_entity.contract_number }}
+  Приложение № 2 к {{ legal_entity.contract_type.value }} № {{ legal_entity.contract_number }}
 </p>
 <p style="text-align:right; font-size:9pt; margin-top:0;">
   Оплата по данному расчёту с "___" _____________ 20___ г.
@@ -68,21 +69,23 @@
 </table>
 
 <br>
-<table style="width:100%; border:none; margin-top:30px; font-size:10pt;">
+<table style="width:100%; border:none; margin-top:80px; font-size:10pt;">
   <tr>
     <td style="border:none; width:50%; vertical-align:top;">
       "УТВЕРЖДАЮ"<br>
-      {{ settings.chief_title if settings else 'Начальник' }}<br><br>
-      <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
-      ({{ settings.chief_name if settings else '' }})<br>
-      "&nbsp;&nbsp;&nbsp;" &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 20___ г.
+      {{ settings.chief_title if settings else 'Начальник' }}<br>
+      <br><br><br>
+      <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
+      ({{ settings.chief_name if settings else '' }})<br><br>
+      "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 20___ г.
     </td>
-    <td style="border:none; width:50%; vertical-align:top;">
+    <td style="border:none; width:50%; vertical-align:top; padding-left:20%;">
       "УТВЕРЖДАЮ"<br>
-      {{ legal_entity.name if legal_entity else '' }}<br><br>
-      <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
-      ({{ obj.signatory }})<br>
-      "&nbsp;&nbsp;&nbsp;" &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 20___ г.
+      {{ legal_entity.name if legal_entity else '' }}<br>
+      <br><br><br>
+      <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
+      ({{ obj.signatory }})<br><br>
+      "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 20___ г.
     </td>
   </tr>
 </table>

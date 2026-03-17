@@ -1,5 +1,6 @@
-from datetime import date
+"""SQL-реализация репозитория охраняемых объектов и видов охраны."""
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from src.domain.entities.guarded_object import GuardedObject
@@ -13,6 +14,7 @@ from src.infrastructure.database.models import (
 
 
 def _to_object(m: GuardedObjectModel) -> GuardedObject:
+    """Преобразует ORM-модель объекта в доменную сущность GuardedObject."""
     return GuardedObject(
         id=m.id,
         legal_entity_id=m.legal_entity_id,
@@ -27,6 +29,7 @@ def _to_object(m: GuardedObjectModel) -> GuardedObject:
 
 
 def _to_schedule(m: GuardScheduleModel) -> GuardSchedule:
+    """Преобразует ORM-модель расписания в доменную сущность GuardSchedule."""
     return GuardSchedule(
         id=m.id,
         work_start=m.work_start,
@@ -45,6 +48,7 @@ def _to_schedule(m: GuardScheduleModel) -> GuardSchedule:
 
 
 def _to_service(m: ObjectServiceModel) -> ObjectService:
+    """Преобразует ORM-модель вида охраны в доменную сущность ObjectService."""
     return ObjectService(
         id=m.id,
         object_id=m.object_id,
@@ -58,26 +62,52 @@ def _to_service(m: ObjectServiceModel) -> ObjectService:
 
 
 class SQLObjectRepository(IObjectRepository):
+    """Реализация IObjectRepository через SQLAlchemy и SQLite."""
 
     def __init__(self, db: Session) -> None:
         self._db = db
 
+    def count_active_by_legal_entities(self) -> dict[int, int]:
+        """Возвращает словарь {legal_entity_id: количество активных объектов} для всех юр. лиц."""
+        rows = (
+            self._db.query(GuardedObjectModel.legal_entity_id, func.count(GuardedObjectModel.id))
+            .filter_by(is_archived=False)
+            .group_by(GuardedObjectModel.legal_entity_id)
+            .all()
+        )
+        return {le_id: count for le_id, count in rows}
+
     def get_by_legal_entity(self, legal_entity_id: int) -> list[GuardedObject]:
+        """Возвращает все активные (не архивные) объекты указанного юридического лица."""
         rows = (
             self._db.query(GuardedObjectModel)
-            .filter_by(legal_entity_id=legal_entity_id)
+            .filter_by(legal_entity_id=legal_entity_id, is_archived=False)
+            .order_by(GuardedObjectModel.name)
+            .all()
+        )
+        return [_to_object(r) for r in rows]
+
+    def get_archived(self, legal_entity_id: int) -> list[GuardedObject]:
+        """Возвращает архивные объекты указанного юридического лица."""
+        rows = (
+            self._db.query(GuardedObjectModel)
+            .filter_by(legal_entity_id=legal_entity_id, is_archived=True)
             .order_by(GuardedObjectModel.name)
             .all()
         )
         return [_to_object(r) for r in rows]
 
     def get_by_id(self, object_id: int) -> GuardedObject | None:
+        """Возвращает объект по идентификатору или None, если не найден."""
         row = self._db.get(GuardedObjectModel, object_id)
         return _to_object(row) if row else None
 
     def save(self, obj: GuardedObject) -> GuardedObject:
+        """Сохраняет объект. Создаёт новый, если id равен None; обновляет существующий иначе."""
         if obj.id:
             m = self._db.get(GuardedObjectModel, obj.id)
+            if m is None:
+                raise ValueError(f"GuardedObject id={obj.id} не найден в БД")
         else:
             m = GuardedObjectModel()
             self._db.add(m)
@@ -94,18 +124,21 @@ class SQLObjectRepository(IObjectRepository):
         return _to_object(m)
 
     def delete(self, object_id: int) -> None:
+        """Удаляет объект и все связанные записи (виды охраны)."""
         row = self._db.get(GuardedObjectModel, object_id)
         if row:
             self._db.delete(row)
             self._db.commit()
 
     def archive(self, object_id: int) -> None:
+        """Переводит объект в архив (устанавливает is_archived = True)."""
         row = self._db.get(GuardedObjectModel, object_id)
         if row:
             row.is_archived = True
             self._db.commit()
 
     def get_services(self, object_id: int) -> list[ObjectService]:
+        """Возвращает все виды охраны с расписанием для указанного объекта."""
         rows = (
             self._db.query(ObjectServiceModel)
             .options(joinedload(ObjectServiceModel.schedule))
@@ -115,8 +148,11 @@ class SQLObjectRepository(IObjectRepository):
         return [_to_service(r) for r in rows]
 
     def save_service(self, service: ObjectService) -> ObjectService:
+        """Сохраняет вид охраны вместе с расписанием. Создаёт или обновляет."""
         if service.id:
             m = self._db.get(ObjectServiceModel, service.id)
+            if m is None:
+                raise ValueError(f"ObjectService id={service.id} не найден в БД")
         else:
             m = ObjectServiceModel()
             self._db.add(m)
@@ -149,6 +185,7 @@ class SQLObjectRepository(IObjectRepository):
         return _to_service(m)
 
     def delete_service(self, service_id: int) -> None:
+        """Удаляет вид охраны и связанное расписание."""
         row = self._db.get(ObjectServiceModel, service_id)
         if row:
             self._db.delete(row)

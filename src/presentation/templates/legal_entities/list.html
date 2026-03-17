@@ -29,7 +29,7 @@
         <td><a href="/legal-entities/{{ e.id }}" class="text-decoration-none fw-medium">{{ e.name }}</a></td>
         <td><span class="badge bg-secondary">{{ e.contract_type.value }}</span></td>
         <td>{{ e.contract_number or '—' }}</td>
-        <td>—</td>
+        <td>{{ object_counts.get(e.id, 0) or '—' }}</td>
         <td class="text-end">
           <a href="/legal-entities/{{ e.id }}" class="btn btn-sm btn-outline-primary">Открыть</a>
         </td>
