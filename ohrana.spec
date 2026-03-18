@@ -3,6 +3,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 datas = [
     ("src/presentation/templates", "src/presentation/templates"),
+    ("src/presentation/static", "src/presentation/static"),
 ]
 datas += collect_data_files("weasyprint")
 
