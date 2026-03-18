@@ -13,6 +13,7 @@ if sys.platform == "darwin":
         os.environ["DYLD_LIBRARY_PATH"] = f"{brew_lib}:{current}".strip(":")
 
 import uvicorn
+from src.presentation.app import app
 
 
 def open_browser():
@@ -23,7 +24,7 @@ def open_browser():
 if __name__ == "__main__":
     threading.Thread(target=open_browser, daemon=True).start()
     uvicorn.run(
-        "src.presentation.app:app",
+        app,
         host="127.0.0.1",
         port=8080,
         reload=False,
