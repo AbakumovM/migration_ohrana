@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Архив{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <h5 class="mb-0 me-auto text-muted"><i class="bi bi-archive me-2"></i>Архив ({{ archived|length }})</h5>
+</div>
+
+<div class="card">
+  <table class="table table-hover mb-0">
+    <thead>
+      <tr>
+        <th>Юр. лицо</th>
+        <th>Объект</th>
+        <th>Город</th>
+        <th>Адрес</th>
+        <th>Принят под охрану</th>
+        <th>Виды охраны</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for obj in archived %}
+      {% set entity = entities.get(obj.legal_entity_id) %}
+      <tr class="align-middle text-muted">
+        <td>
+          {% if entity %}
+            <a href="/legal-entities/{{ entity.id }}" class="text-decoration-none text-muted">
+              {{ entity.name }}
+            </a>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <a href="/objects/{{ obj.id }}" class="text-decoration-none text-muted">{{ obj.name }}</a>
+        </td>
+        <td>{{ obj.town }}</td>
+        <td>{{ obj.street }}</td>
+        <td>{{ obj.accepted_date.strftime('%d.%m.%Y') if obj.accepted_date else '—' }}</td>
+        <td>
+          {% set svcs = services_map.get(obj.id, []) %}
+          {% for svc in svcs %}
+            <span class="badge bg-secondary">{{ svc.service_type.value }}</span>
+          {% else %}
+            —
+          {% endfor %}
+        </td>
+        <td>
+          <div class="d-flex gap-2">
+            <a href="/objects/{{ obj.id }}" class="btn btn-sm btn-outline-secondary">Открыть</a>
+            <form method="post" action="/objects/{{ obj.id }}/unarchive">
+              <button class="btn btn-sm btn-outline-success"
+                      onclick="return confirm('Восстановить объект из архива?')">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Восстановить
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="text-center text-muted py-5">
+          <i class="bi bi-archive fs-3 d-block mb-2"></i>
+          Архив пуст
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

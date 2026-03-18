@@ -66,6 +66,17 @@ class ArchiveObject:
         self._repo.archive(object_id)
 
 
+class UnarchiveObject:
+    """Восстанавливает охраняемый объект из архива."""
+
+    def __init__(self, repo: IObjectRepository) -> None:
+        self._repo = repo
+
+    def execute(self, object_id: int) -> None:
+        """Устанавливает is_archived = False для объекта."""
+        self._repo.unarchive(object_id)
+
+
 class GetObjectServices:
     """Возвращает виды охраны для указанного объекта."""
 

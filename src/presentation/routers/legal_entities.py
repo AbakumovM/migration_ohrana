@@ -23,6 +23,8 @@ from src.infrastructure.repositories.object_repository import SQLObjectRepositor
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parents[1] / "templates")
 
+_PAGE_SIZE = 25
+
 
 def _le_repo(db: Session) -> SQLLegalEntityRepository:
     return SQLLegalEntityRepository(db)
@@ -33,13 +35,25 @@ def _obj_repo(db: Session) -> SQLObjectRepository:
 
 
 @router.get("/", response_class=HTMLResponse)
-def index(request: Request, search: str = "", db: Session = Depends(get_db)):
+def index(request: Request, search: str = "", page: int = 1, db: Session = Depends(get_db)):
     repo = _le_repo(db)
-    entities = SearchLegalEntities(repo).execute(search) if search else GetAllLegalEntities(repo).execute()
+    all_entities = SearchLegalEntities(repo).execute(search) if search else GetAllLegalEntities(repo).execute()
+    total = len(all_entities)
+    total_pages = max(1, (total + _PAGE_SIZE - 1) // _PAGE_SIZE)
+    page = max(1, min(page, total_pages))
+    entities = all_entities[(page - 1) * _PAGE_SIZE : page * _PAGE_SIZE]
     object_counts = _obj_repo(db).count_active_by_legal_entities()
     return templates.TemplateResponse(
         "legal_entities/list.html",
-        {"request": request, "entities": entities, "search": search, "object_counts": object_counts},
+        {
+            "request": request,
+            "entities": entities,
+            "search": search,
+            "object_counts": object_counts,
+            "page": page,
+            "total_pages": total_pages,
+            "total": total,
+        },
     )
 
 

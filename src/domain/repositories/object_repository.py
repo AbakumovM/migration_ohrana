@@ -23,6 +23,11 @@ class IObjectRepository(ABC):
         ...
 
     @abstractmethod
+    def get_all_archived(self) -> list[GuardedObject]:
+        """Возвращает все архивные объекты по всем юридическим лицам."""
+        ...
+
+    @abstractmethod
     def get_by_id(self, object_id: int) -> GuardedObject | None:
         """Возвращает объект по идентификатору или None, если не найден."""
         ...
@@ -40,6 +45,11 @@ class IObjectRepository(ABC):
     @abstractmethod
     def archive(self, object_id: int) -> None:
         """Переводит объект в архив (устанавливает is_archived = True)."""
+        ...
+
+    @abstractmethod
+    def unarchive(self, object_id: int) -> None:
+        """Восстанавливает объект из архива (устанавливает is_archived = False)."""
         ...
 
     @abstractmethod

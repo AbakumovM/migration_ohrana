@@ -16,6 +16,7 @@ from src.application.use_cases.guarded_object import (
     GetObjectServices,
     SaveObject,
     SaveObjectService,
+    UnarchiveObject,
 )
 from src.domain.entities.guarded_object import GuardedObject
 from src.domain.entities.object_service import GuardSchedule, ObjectService, ServiceType
@@ -115,6 +116,12 @@ def archive(object_id: int, db: Session = Depends(get_db)):
     return RedirectResponse(
         f"/legal-entities/{legal_entity_id}" if legal_entity_id else "/", status_code=303
     )
+
+
+@router.post("/{object_id}/unarchive")
+def unarchive(object_id: int, db: Session = Depends(get_db)):
+    UnarchiveObject(_repo(db)).execute(object_id)
+    return RedirectResponse("/archive", status_code=303)
 
 
 @router.post("/{object_id}/delete")

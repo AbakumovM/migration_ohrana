@@ -97,6 +97,16 @@ class SQLObjectRepository(IObjectRepository):
         )
         return [_to_object(r) for r in rows]
 
+    def get_all_archived(self) -> list[GuardedObject]:
+        """Возвращает все архивные объекты по всем юридическим лицам."""
+        rows = (
+            self._db.query(GuardedObjectModel)
+            .filter_by(is_archived=True)
+            .order_by(GuardedObjectModel.name)
+            .all()
+        )
+        return [_to_object(r) for r in rows]
+
     def get_by_id(self, object_id: int) -> GuardedObject | None:
         """Возвращает объект по идентификатору или None, если не найден."""
         row = self._db.get(GuardedObjectModel, object_id)
@@ -135,6 +145,13 @@ class SQLObjectRepository(IObjectRepository):
         row = self._db.get(GuardedObjectModel, object_id)
         if row:
             row.is_archived = True
+            self._db.commit()
+
+    def unarchive(self, object_id: int) -> None:
+        """Восстанавливает объект из архива (устанавливает is_archived = False)."""
+        row = self._db.get(GuardedObjectModel, object_id)
+        if row:
+            row.is_archived = False
             self._db.commit()
 
     def get_services(self, object_id: int) -> list[ObjectService]:
