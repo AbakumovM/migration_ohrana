@@ -3,7 +3,6 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 datas = [
     ("src/presentation/templates", "src/presentation/templates"),
-    ("ohrana.db", "."),
 ]
 datas += collect_data_files("weasyprint")
 

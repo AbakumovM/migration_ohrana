@@ -7,10 +7,11 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-# При запуске из .exe (PyInstaller frozen) храним БД рядом с исполняемым файлом,
-# при обычном запуске — в корне проекта.
+# При запуске из .exe (PyInstaller) — БД в ~/ohrana/, не зависит от папки приложения.
+# При обычном запуске — в корне проекта.
 if getattr(sys, "frozen", False):
-    DB_PATH = Path(sys.executable).parent / "ohrana.db"
+    DB_PATH = Path.home() / "ohrana" / "ohrana.db"
+    DB_PATH.parent.mkdir(exist_ok=True)
 else:
     DB_PATH = Path(__file__).parents[3] / "ohrana.db"
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
