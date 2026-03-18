@@ -26,6 +26,11 @@ hiddenimports += [
     "tinycss2",
     "html5lib",
     "dbfread",
+    "pystray",
+    "pystray._util",
+    "PIL",
+    "PIL.Image",
+    "PIL.ImageDraw",
 ]
 
 a = Analysis(
