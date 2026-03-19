@@ -1,0 +1,53 @@
+name: Build Linux
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (WeasyPrint)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpango-1.0-0 libpangocairo-1.0-0 libcairo2 \
+            libgdk-pixbuf2.0-0 libffi-dev shared-mime-info \
+            libgirepository1.0-dev gcc
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Python 3.13
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Install PyInstaller
+        run: uv add --dev pyinstaller
+
+      - name: Build
+        run: uv run pyinstaller ohrana.spec
+
+      - name: Make executable
+        run: chmod +x dist/ohrana/ohrana
+
+      - name: Archive build
+        run: tar -czf ohrana-linux.tar.gz -C dist ohrana
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ohrana-linux
+          path: ohrana-linux.tar.gz
+          retention-days: 90

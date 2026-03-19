@@ -39,8 +39,8 @@ if __name__ == "__main__":
     threading.Thread(target=server.run, daemon=True).start()
     threading.Thread(target=_open_browser, daemon=True).start()
 
-    # Иконка в трее только на Windows (или в замороженном exe)
-    if sys.platform == "win32" or getattr(sys, "frozen", False):
+    # Иконка в трее только на Windows
+    if sys.platform == "win32":
         import pystray
 
         def _on_open(icon, item):
