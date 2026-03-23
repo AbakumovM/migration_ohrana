@@ -8,3 +8,30 @@ wheels/
 
 # Virtual environments
 .venv
+
+# База данных
+ohrana.db
+
+# Легаси VFP данные
+DATA/
+DATA_/
+1/
+DOC/
+DATA.7z
+*.dbf
+*.DBF
+*.cdx
+*.CDX
+*.fpt
+*.FPT
+*.BAK
+*.TBK
+*.FXP
+*.exe
+*.dll
+*.ico
+FOXUSER.*
+Thumbs.db
+VFP8Rerr.log
+config.fpw
+REVIEW.md
