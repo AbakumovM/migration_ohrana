@@ -1,11 +1,12 @@
 from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from src.infrastructure.database.models import Base
 from src.infrastructure.database.session import engine
@@ -21,17 +22,28 @@ STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-class AuthMiddleware(BaseHTTPMiddleware):
-    """Перенаправляет неавторизованных пользователей на /login."""
+class AuthMiddleware:
+    """Перенаправляет неавторизованных пользователей на /login.
+
+    Чистый ASGI-middleware — не буферизует тело запроса,
+    поэтому корректно работает с form data.
+    """
 
     EXEMPT = {"/login"}
 
-    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
-        path = request.url.path
-        if path not in self.EXEMPT and not path.startswith("/static"):
-            if not request.session.get("authenticated"):
-                return RedirectResponse("/login")
-        return await call_next(request)
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> Any:
+        if scope["type"] == "http":
+            path: str = scope["path"]
+            if path not in self.EXEMPT and not path.startswith("/static"):
+                session: dict = scope.get("session", {})
+                if not session.get("authenticated"):
+                    response = RedirectResponse("/login")
+                    await response(scope, receive, send)
+                    return
+        await self.app(scope, receive, send)
 
 
 # Порядок важен: SessionMiddleware добавляется последним → выполняется первым
