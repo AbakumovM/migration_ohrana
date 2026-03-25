@@ -52,7 +52,7 @@ cd ohrana
 
 > **Важно**: если уже есть заполненная база `ohrana.db` — скопируй её отдельно:
 > ```bash
-> scp /Users/mihailabakumov/Downloads/ohrana/ohrana.db mikhail@194.180.188.95:/home/mikhail/ohrana/
+> scp /Users/mihailabakumov/Downloads/ohrana.db mikhail@194.180.188.95:/home/mikhail/ohrana/
 > ```
 
 ---
@@ -105,7 +105,7 @@ After=network.target
 [Service]
 Type=simple
 User=mikhail
-WorkingDirectory=/home/mikhail/ohrana
+WorkingDirectory=/home/mikhail/migration_ohrana
 ExecStart=/home/mikhail/.local/bin/uv run uvicorn src.presentation.app:app --host 0.0.0.0 --port 8080
 Restart=on-failure
 RestartSec=5
@@ -162,10 +162,22 @@ sudo systemctl disable ohrana
 
 Приложение **без авторизации** — любой кто знает IP, может зайти. Для временного
 использования внутри локальной сети или VPN это нормально. Если сервер публичный —
-огради доступ по IP через firewall:
+огради доступ по IP через firewall.
+
+### Узнать внешний IP компьютера
+
+На каждом компьютере, которому нужен доступ, открой браузер и зайди на:
+- https://ifconfig.me
+- https://2ip.ru
+
+### Разрешить доступ только с конкретных IP
 
 ```bash
-# Разрешить только с твоего IP:
-sudo ufw allow from ВАШ_IP to any port 8080
+sudo ufw allow from IP_КОМПЬЮТЕРА_1 to any port 8080
+sudo ufw allow from IP_КОМПЬЮТЕРА_2 to any port 8080
 sudo ufw deny 8080
+sudo ufw enable
+
+# Проверить правила:
+sudo ufw status
 ```

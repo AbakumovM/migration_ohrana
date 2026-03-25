@@ -15,4 +15,6 @@ dependencies = [
     "weasyprint>=62.0",
     "pystray>=0.19.5",
     "pillow>=12.1.1",
+    "itsdangerous>=2.2.0",
+    "python-dotenv>=1.2.2",
 ]
