@@ -33,7 +33,7 @@ def _open_browser():
 
 
 if __name__ == "__main__":
-    config = uvicorn.Config(app, host="127.0.0.1", port=8080, log_config=None)
+    config = uvicorn.Config(app, host="127.0.0.1", port=8080)
     server = uvicorn.Server(config)
 
     threading.Thread(target=server.run, daemon=True).start()
